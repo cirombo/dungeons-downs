@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>FICHA // Cyberpunk</title>
+<style>
+:root{--bg:#050505;--panel:#0d0708;--red:#ff1e3c;--dim:#7a1020;--text:#ffd9de;color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--text);font-family:"Share Tech Mono","Courier New",monospace;background-image:repeating-linear-gradient(0deg,rgba(255,30,60,.05) 0 1px,transparent 1px 4px)}
+.wrap{max-width:720px;margin:0 auto;padding:16px}
+h1{margin:4px 0 2px;color:var(--red);letter-spacing:.2em;font-size:1.6rem;text-shadow:2px 0 #00e5ff55,-2px 0 var(--red)}
+.sub{color:var(--dim);font-size:.8rem;margin-bottom:14px}
+.panel{background:var(--panel);border:1px solid var(--red);box-shadow:0 0 12px rgba(255,30,60,.35),inset 0 0 18px rgba(255,30,60,.08);padding:14px;margin-bottom:14px;clip-path:polygon(0 0,calc(100% - 14px) 0,100% 14px,100% 100%,14px 100%,0 calc(100% - 14px))}
+.panel h2{margin:0 0 10px;font-size:.85rem;letter-spacing:.25em;color:var(--red)}
+.top{display:flex;gap:14px;flex-wrap:wrap}
+.pic{width:140px;height:170px;border:1px dashed var(--red);background:#120609 center/cover no-repeat;display:flex;align-items:center;justify-content:center;text-align:center;color:var(--dim);font-size:.75rem;cursor:pointer;flex:none;padding:6px}
+.pic:hover{box-shadow:0 0 10px var(--red)}
+.fields{flex:1;min-width:200px;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.fields .full{grid-column:1/-1}
+label{display:block;font-size:.7rem;letter-spacing:.2em;color:var(--red);margin-bottom:3px}
+input[type=text],input[type=number],textarea{width:100%;background:#000;color:var(--text);border:1px solid var(--dim);padding:8px;font:inherit;font-size:1rem;outline:none}
+input:focus,textarea:focus{border-color:var(--red);box-shadow:0 0 8px rgba(255,30,60,.5)}
+textarea{min-height:160px;resize:vertical}
+.pts{float:right;color:var(--text);letter-spacing:.1em}
+.pts.flash{animation:fl .4s}
+@keyframes fl{50%{color:#fff;text-shadow:0 0 10px var(--red)}}
+.stat{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.stat b{width:46px;color:var(--red);letter-spacing:.1em}
+.boxes{display:flex;gap:4px;flex:1}
+.box{flex:1;aspect-ratio:1;max-width:34px;border:1px solid var(--red);background:transparent;cursor:pointer;padding:0}
+.box.on{background:var(--red);box-shadow:0 0 8px var(--red)}
+.num{width:22px;text-align:right}
+.btns{display:flex;gap:10px;flex-wrap:wrap}
+button.act{background:transparent;color:var(--red);border:1px solid var(--red);padding:10px 18px;font:inherit;letter-spacing:.2em;cursor:pointer}
+button.act:hover{background:var(--red);color:#000}
+#msg{margin-top:10px;font-size:.8rem;color:var(--dim);min-height:1.2em}
+#fallback{display:none;margin-top:10px}
+#fallback textarea{min-height:90px;font-size:.7rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>▍FICHA//</h1>
+<div class="sub">REGISTRO DE PERSONAJE · NIVEL DE ACCESO: JUGADOR</div>
+
+<div class="panel">
+<div class="top">
+<div class="pic" id="pic" title="Subir imagen">[ + IMAGEN ]</div>
+<input type="file" id="picIn" accept="image/*" hidden>
+<div class="fields">
+<div class="full"><label for="nombre">NOMBRE</label><input type="text" id="nombre" maxlength="60"></div>
+<div><label for="edad">EDAD</label><input type="text" id="edad" maxlength="20" inputmode="numeric"></div>
+<div><label for="raza">RAZA</label><input type="text" id="raza" maxlength="40"></div>
+<div class="full"><label for="prof">PROFESIÓN</label><input type="text" id="prof" maxlength="60"></div>
+</div>
+</div>
+</div>
+
+<div class="panel">
+<h2>STATS <span class="pts" id="pts">0/5</span></h2>
+<div id="stats"></div>
+</div>
+
+<div class="panel">
+<h2>LORE</h2>
+<textarea id="lore" maxlength="8000" placeholder="Historia, motivaciones, contactos…"></textarea>
+</div>
+
+<div class="panel">
+<div class="btns">
+<button class="act" id="save">GUARDAR</button>
+<button class="act" id="load">CARGAR</button>
+<input type="file" id="loadIn" accept=".json,application/json" hidden>
+</div>
+<div id="msg"></div>
+<div id="fallback">
+<label for="code">Copiá este código y pasalo, o pegá uno acá y tocá «Aplicar»</label>
+<textarea id="code"></textarea>
+<button class="act" id="apply" style="margin-top:8px">APLICAR</button>
+</div>
+</div>
+</div>
+
+<script>
+(function(){
+var NAMES=["DEX","STR","WIT","CHA","INT","CON"], MAX=5;
+var stats={DEX:0,STR:0,WIT:0,CHA:0,INT:0,CON:0};
+var img="";
+var $=function(id){return document.getElementById(id)};
+function total(){return NAMES.reduce(function(a,n){return a+stats[n]},0)}
+function say(t){$("msg").textContent=t}
+
+function render(){
+  var box=$("stats");box.textContent="";
+  NAMES.forEach(function(n){
+    var row=document.createElement("div");row.className="stat";
+    var b=document.createElement("b");b.textContent=n;row.appendChild(b);
+    var bx=document.createElement("div");bx.className="boxes";
+    for(var i=1;i<=10;i++){
+      var s=document.createElement("button");s.type="button";
+      s.className="box"+(i<=stats[n]?" on":"");
+      s.setAttribute("aria-label",n+" "+i);
+      s.onclick=(function(i){return function(){setStat(n,i)}})(i);
+      bx.appendChild(s);
+    }
+    row.appendChild(bx);
+    var nm=document.createElement("span");nm.className="num";nm.textContent=stats[n];row.appendChild(nm);
+    box.appendChild(row);
+  });
+  $("pts").textContent=total()+"/"+MAX;
+}
+function setStat(n,v){
+  var nv=(stats[n]===v)?v-1:v;
+  var t=total()-stats[n]+nv;
+  if(t>MAX){var p=$("pts");p.classList.remove("flash");void p.offsetWidth;p.classList.add("flash");say("Máximo "+MAX+" cuadritos en total.");return}
+  stats[n]=nv;say("");render();
+}
+
+/* imagen */
+$("pic").onclick=function(){$("picIn").click()};
+function showImg(){
+  var p=$("pic");
+  if(img){p.style.backgroundImage="url("+JSON.stringify(img)+")";p.textContent=""}
+  else{p.style.backgroundImage="";p.textContent="[ + IMAGEN ]"}
+}
+$("picIn").onchange=function(e){
+  var f=e.target.files[0];if(!f)return;
+  var url=URL.createObjectURL(f),im=new Image();
+  im.onload=function(){
+    var m=360,k=Math.min(1,m/Math.max(im.width,im.height));
+    var c=document.createElement("canvas");c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);
+    c.getContext("2d").drawImage(im,0,0,c.width,c.height);
+    img=c.toDataURL("image/jpeg",0.82);URL.revokeObjectURL(url);showImg();
+  };
+  im.onerror=function(){say("No se pudo leer esa imagen.")};
+  im.src=url;e.target.value="";
+};
+
+/* datos */
+function collect(){
+  return {v:1,nombre:$("nombre").value,edad:$("edad").value,raza:$("raza").value,profesion:$("prof").value,stats:stats,lore:$("lore").value,imagen:img};
+}
+function apply(d){
+  if(!d||typeof d!=="object")throw new Error("bad");
+  var str=function(x,n){return typeof x==="string"?x.slice(0,n):""};
+  $("nombre").value=str(d.nombre,60);$("edad").value=str(d.edad,20);$("raza").value=str(d.raza,40);
+  $("prof").value=str(d.profesion,60);$("lore").value=str(d.lore,8000);
+  var left=MAX,s=d.stats||{};
+  NAMES.forEach(function(n){var v=Math.max(0,Math.min(10,parseInt(s[n],10)||0));v=Math.min(v,left);left-=v;stats[n]=v});
+  img=(typeof d.imagen==="string"&&/^data:image\/(jpeg|png|webp|gif);base64,[A-Za-z0-9+\/=]+$/.test(d.imagen))?d.imagen:"";
+  showImg();render();
+}
+
+/* guardar / cargar */
+$("save").onclick=async function(){
+  var data=JSON.stringify(collect());
+  var name=($("nombre").value.trim()||"personaje").replace(/[^\w\-áéíóúñÁÉÍÓÚÑ ]/g,"").replace(/\s+/g,"-");
+  try{
+    var blob=new Blob([data],{type:"application/json"});
+    var u=URL.createObjectURL(blob),l=document.createElement("a");
+    l.href=u;l.download="ficha-"+name+".json";document.body.appendChild(l);l.click();l.remove();
+    setTimeout(function(){URL.revokeObjectURL(u)},1000);say("Ficha guardada.");return;
+  }catch(e){}
+  $("fallback").style.display="block";$("code").value=data;say("Descarga no disponible: copiá el código de abajo.");
+};
+$("load").onclick=function(){$("loadIn").click()};
+$("loadIn").onchange=function(e){
+  var f=e.target.files[0];if(!f)return;
+  var r=new FileReader();
+  r.onload=function(){try{apply(JSON.parse(r.result));say("Ficha cargada.")}catch(x){say("Archivo inválido.")}};
+  r.readAsText(f);e.target.value="";
+};
+$("apply").onclick=function(){try{apply(JSON.parse($("code").value));say("Ficha cargada.")}catch(x){say("Código inválido.")}};
+
+render();
+})();
+</script>
+</body>
+</html>
