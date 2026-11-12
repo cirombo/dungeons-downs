@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ruleta de deres</title>
+<style>
+body{font-family:sans-serif;text-align:center;background:#111;color:#eee;margin:0;padding:16px}
+canvas{max-width:100%;height:auto}
+button{font-size:18px;padding:10px 24px;margin:10px}
+#r{font-size:28px;font-weight:bold;margin-top:8px}
+#d{max-width:480px;margin:6px auto;font-size:16px}
+#p{position:relative;display:inline-block}
+#p::after{content:"▼";position:absolute;top:-6px;left:50%;transform:translateX(-50%);font-size:28px;color:#fff}
+</style>
+</head>
+<body>
+<div id="p"><canvas id="c" width="420" height="420"></canvas></div><br>
+<button id="b">Girar</button>
+<div id="r"></div>
+<div id="d"></div>
+<script>
+const D=[
+["Tsundere","Hostil y arisca por fuera, pero en el fondo es cariñosa; le cuesta admitir lo que siente."],
+["Yandere","Dulce y devota, pero su amor se vuelve obsesivo y violento hacia quien amenaza la relación."],
+["Kuudere","Fría, calmada e inexpresiva por fuera; siente mucho pero lo muestra poco."],
+["Dandere","Muy callada y tímida; se abre y se vuelve cálida solo con quien confía."],
+["Himedere","Se comporta como una princesa: exige trato real y que la mimen."],
+["Deredere","Pura alegría y afecto, abierta y cariñosa sin vueltas."],
+["Sundere","Variante de tsundere que se vuelve cada vez más amable y dulce con el tiempo."],
+["Bodere","Cariñosa a través de lo físico: contacto, abrazos, cercanía constante."],
+["Kamidere","Se cree una diosa; arrogante y superior, espera adoración."],
+["Oujidere","Versión masculina del himedere: se cree un príncipe y espera trato especial."],
+["Mayadere","Misteriosa y peligrosa, con pasado oscuro; termina rindiéndose al amor."],
+["Shundere","Melancólica y triste, con tono deprimente o trágico; suele estar atada a la muerte."],
+["Thugdere","Rudo, estilo pandillero o delincuente, pero se ablanda con quien quiere."],
+["Hinedere","Cínica y sarcástica al principio; luego se muestra más amable al conocer a alguien."],
+["Undere","Dice que sí a todo lo que dice su pareja; la complace y le sigue la corriente."],
+["Nyandere","Estilo gatuno: juguetona, cariñosa y algo posesiva, a veces con rasgos felinos."],
+["Kanedere","Interesada en el dinero y el estatus; ama al que tiene recursos."],
+["Dorodere","Dulce y amable en apariencia, pero oculta un lado traicionero o manipulador."],
+["Yangire","Explosiva: estalla en violencia o furia de forma impulsiva y sin avisar."],
+["Darudere","Floja, desganada y relajada; pasa de todo con aire de pereza."],
+["Bakadere","Despistada, ingenua y torpe; adorable por lo tonta."],
+["Megadere","Se aferra a la pareja de forma dependiente y no soporta estar sola."],
+["Herodere","Heroica y noble; se sacrifica por quienes ama, cueste lo que cueste."],
+["Zetsubōdere","Vive desesperanzada y pesimista; ve todo negro hasta que el amor la rescata."],
+["Tsunshun","Tsundere con tono bajón: se pone triste y reservada cuando se le acerca alguien."],
+["Coodere","Calmada y madura, siempre cool; protectora sin demostrarlo en exceso."],
+["Gyaru-dere","Estilo gyaru: extrovertida, a la moda y descarada, pero leal."],
+["Utsudere","Deprimida y apagada; el amor le da algo de luz poco a poco."],
+["Ijimedere","Molesta a quien quiere con burlas o bullying cariñoso porque no sabe expresarse."],
+["Sadodere","Disfruta de molestar o dominar a la persona que ama, con tono sádico."],
+["Masodere","Disfruta ser dominada o maltratada por la persona que quiere."],
+["Tsunshun-kuu","Combina frialdad y timidez; apenas habla pero sigue de cerca a quien quiere."],
+["Tsundere-yan","Mezcla de tsundere y yandere: pelea y golpea pero con un fondo posesivo."],
+["Sunshine-dere","Positiva y luminosa; contagia buena onda a todos a su alrededor."],
+["Ojou-dere","Elegante y refinada, de buena familia; esconde ternura bajo la etiqueta."],
+["Tomodere","Cariñosa con los amigos y le cuesta ver a alguien como pareja; ama desde la amistad."],
+["Ayadere","Rara y con aura extraña; seria y distante, con un lado dulce oculto."],
+["Mayadere-kuu","Reservada y enigmática, con secretos; poco a poco confía y se entrega."],
+["Hajidere","Se avergüenza fácil; se sonroja y se pone nerviosa ante cualquier muestra de afecto."],
+["Charmdere","Encantadora y carismática; seduce a todos con su gracia natural."],
+["Chuunidere","Cree tener poderes o un destino especial; su fantasía se mezcla con el cariño."],
+["Nemuidere","Siempre con sueño; adorable y somnolienta, se duerme apoyada en quien quiere."]
+];
+const c=document.getElementById("c"),x=c.getContext("2d"),n=D.length,a=2*Math.PI/n;
+let rot=0,go=false;
+function draw(){
+x.clearRect(0,0,420,420);
+for(let i=0;i<n;i++){
+x.beginPath();x.moveTo(210,210);
+x.arc(210,210,205,rot+i*a,rot+(i+1)*a);
+x.fillStyle="hsl("+(i*360/n)+",70%,45%)";x.fill();
+}
+}
+draw();
+document.getElementById("b").onclick=()=>{
+if(go)return;go=true;
+const total=rot+(6+Math.random()*4)*2*Math.PI+Math.random()*2*Math.PI;
+const start=rot,t0=performance.now(),dur=4000;
+(function f(t){
+const p=Math.min((t-t0)/dur,1),e=1-Math.pow(1-p,3);
+rot=start+(total-start)*e;draw();
+if(p<1)requestAnimationFrame(f);
+else{
+go=false;
+const ang=((-Math.PI/2-rot)%(2*Math.PI)+2*Math.PI)%(2*Math.PI);
+const w=D[Math.floor(ang/a)];
+document.getElementById("r").textContent=w[0];
+document.getElementById("d").textContent=w[1];
+}
+})(t0);
+};
+</script>
+</body>
+</html>
